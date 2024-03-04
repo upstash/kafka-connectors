@@ -40,7 +40,7 @@ done
 shift $((OPTIND -1))
 
 if [ -z "$url" ] || [ -z "$url" ] || [ -z "$password" ] || [ -z "$scale" ]; then
-    echo "URL, USERNAME, PASSWORD, SCALE_COUNT are required."
+    echo "ENDPOINT, USERNAME, PASSWORD, SCALE_COUNT are required."
     usage
 fi
 
@@ -69,33 +69,10 @@ EOF
 done
 
 for ((j=1; j<=$scale; j++)); do
-    cat > connect-distributed-$j.properties <<EOF
-bootstrap.servers=$url
-config.storage.replication.factor=1
-config.storage.topic=connect-configs
-consumer.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="$username" password="$password";
-consumer.sasl.mechanism=SCRAM-SHA-256
-consumer.security.protocol=SASL_SSL
-consumer.ssl.endpoint.identification.algorithm=
-group.id=connect-cluster
-key.converter.schemas.enable=true
-key.converter=org.apache.kafka.connect.json.JsonConverter
-offset.flush.interval.ms=10000
-offset.storage.replication.factor=1
-offset.storage.topic=connect-offsets
-plugin.path=/tmp/connectors
-producer.sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="$username" password="$password";
-producer.sasl.mechanism=SCRAM-SHA-256
-producer.security.protocol=SASL_SSL
-producer.ssl.endpoint.identification.algorithm=
-sasl.jaas.config=org.apache.kafka.common.security.scram.ScramLoginModule required username="$username"  password="$password";
-sasl.mechanism=SCRAM-SHA-256
-security.protocol=SASL_SSL
-ssl.endpoint.identification.algorithm=
-status.storage.replication.factor=1
-status.storage.topic=connect-status
-value.converter.schemas.enable=true
-value.converter=org.apache.kafka.connect.json.JsonConverter
-rest.advertised.host.name=kafka-connect-$j
-EOF
+    config=$(<template-connect-distributed.properties)
+    config=${config//#ENDPOINT#/$url}
+    config=${config//#USERNAME#/$username}
+    config=${config//#PASSWORD#/$password}
+    config=${config//#ID#/$j}
+    echo "$config">"connect-distributed-$j.properties"
 done
