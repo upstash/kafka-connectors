@@ -61,8 +61,8 @@ for ((i=1; i<=$scale; i++)); do
     environment:
       BITNAMI_DEBUG: true
     volumes:
-    - $PWD/connect-distributed-$i.properties:/tmp/connect-distributed-$i.properties
-    - $PWD/connectors:/tmp/connectors
+    - \$PWD/connect-distributed-$i.properties:/tmp/connect-distributed-$i.properties
+    - \$PWD/connectors:/tmp/connectors
     command: /opt/bitnami/kafka/bin/connect-distributed.sh /tmp/connect-distributed-$i.properties
 
 EOF

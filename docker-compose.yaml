@@ -1,0 +1,13 @@
+version: "2"
+services:
+  kafka-connect-1:
+    image: docker.io/bitnami/kafka:3.6
+    ports:
+    - '8081:8083'
+    environment:
+      BITNAMI_DEBUG: true
+    volumes:
+    - $PWD/connect-distributed-1.properties:/tmp/connect-distributed-1.properties
+    - $PWD/connectors:/tmp/connectors
+    command: /opt/bitnami/kafka/bin/connect-distributed.sh /tmp/connect-distributed-1.properties
+
