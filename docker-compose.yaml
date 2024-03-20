@@ -1,0 +1,35 @@
+version: "2"
+services:
+  kafka-connect-1:
+    image: docker.io/bitnami/kafka:3.6
+    ports:
+    - '8081:8083'
+    environment:
+      BITNAMI_DEBUG: true
+    volumes:
+    - /Users/burakyilmaz/Desktop/upstash/kafka-connectors/connect-distributed-1.properties:/tmp/connect-distributed-1.properties
+    - /Users/burakyilmaz/Desktop/upstash/kafka-connectors/connectors:/tmp/connectors
+    command: /opt/bitnami/kafka/bin/connect-distributed.sh /tmp/connect-distributed-1.properties
+
+  kafka-connect-2:
+    image: docker.io/bitnami/kafka:3.6
+    ports:
+    - '8082:8083'
+    environment:
+      BITNAMI_DEBUG: true
+    volumes:
+    - /Users/burakyilmaz/Desktop/upstash/kafka-connectors/connect-distributed-2.properties:/tmp/connect-distributed-2.properties
+    - /Users/burakyilmaz/Desktop/upstash/kafka-connectors/connectors:/tmp/connectors
+    command: /opt/bitnami/kafka/bin/connect-distributed.sh /tmp/connect-distributed-2.properties
+
+  kafka-connect-3:
+    image: docker.io/bitnami/kafka:3.6
+    ports:
+    - '8083:8083'
+    environment:
+      BITNAMI_DEBUG: true
+    volumes:
+    - /Users/burakyilmaz/Desktop/upstash/kafka-connectors/connect-distributed-3.properties:/tmp/connect-distributed-3.properties
+    - /Users/burakyilmaz/Desktop/upstash/kafka-connectors/connectors:/tmp/connectors
+    command: /opt/bitnami/kafka/bin/connect-distributed.sh /tmp/connect-distributed-3.properties
+

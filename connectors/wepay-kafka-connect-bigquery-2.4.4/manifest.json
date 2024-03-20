@@ -1,0 +1,36 @@
+{
+  "name" : "kafka-connect-bigquery",
+  "version" : "2.4.4",
+  "title" : "BigQuery Sink Connector",
+  "description" : "A sink connector for writing to Google BigQuery, with support for automatic table creation and schema evolution.",
+  "owner" : {
+    "username" : "wepay",
+    "type" : "organization",
+    "name" : "WePay",
+    "url" : "https://go.wepay.com/"
+  },
+  "support" : {
+    "summary" : "Confluent supports WePay's BigQuery connector version 1.1.2 and later. This connector is <a href=\"https://www.confluent.io/subscription/\">supported by Confluent</a> as part of a <a href=\"https://www.confluent.io/product/confluent-platform/\">Confluent Platform</a> subscription.",
+    "url" : "https://docs.confluent.io/kafka-connect-bigquery/current/index.html",
+    "logo" : "assets/confluent.png",
+    "provider_name" : "Confluent, Inc."
+  },
+  "tags" : [ "cloud", "analytics", "data", "gcp", "google", "bigquery", "warehouse", "platform", "nosql" ],
+  "requirements" : [ "Apache Kafka 0.11 or higher / Confluent Platform 3.3 or higher", "Java 1.8 or higher", "Active Google Cloud Platform (GCP) account with authorization to create resources", "Kafka Connect 0.11 or higher / Confluent Platform 3.3 or higher" ],
+  "features" : {
+    "supported_encodings" : [ "any" ],
+    "single_message_transforms" : true,
+    "confluent_control_center_integration" : true,
+    "kafka_connect_api" : true
+  },
+  "logo" : "assets/BigQuery.png",
+  "documentation_url" : "https://docs.confluent.io/kafka-connect-bigquery/current/index.html",
+  "source_url" : "https://github.com/confluentinc/kafka-connect-bigquery",
+  "docker_image" : { },
+  "license" : [ {
+    "name" : "Apache License 2.0",
+    "url" : "https://www.apache.org/licenses/LICENSE-2.0"
+  } ],
+  "component_types" : [ "sink" ],
+  "release_date" : "2023-01-19"
+}
