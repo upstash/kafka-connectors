@@ -27,7 +27,7 @@ Then, you can create a connector via the REST API:
  curl -d '{"name": "test-connector","config": {"connector.class": "io.aiven.kafka.connect.http.HttpSinkConnector","topics": "<chosen topic name>","http.url": "https://<subdomain>.requestcatcher.com/test","http.authorization.type": "none","key.converter": "org.apache.kafka.connect.storage.StringConverter","value.converter": "org.apache.kafka.connect.storage.StringConverter"}}' -H "Content-Type: application/json" -X POST http://localhost:8081/connectors
 ```
 
->>> Make sure you have created a topic with name `<chosen topic name>`.
+> Make sure you have created a topic with name `<chosen topic name>`.
 
 Now, when you produce a message to topic `<chosen topic name>`, you should be able to see the request caught at `https://<subdomain>.requestcatcher.com/test`.
 
