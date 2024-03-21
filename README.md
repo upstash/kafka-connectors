@@ -151,7 +151,7 @@ Response:
 ]
 ```
 
-# List created connectors
+### List created connectors
 
 ```bash
 curl localhost:8081/connectors
