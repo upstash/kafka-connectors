@@ -1,22 +1,33 @@
 # Migrate from Upstash Kafka Connectors
+This project is a helper tool for users to migrate from Upstash Kafka Connectors.
 
-Run the following command to generate a docker-compose.yaml file and connector properties.
-(For standalone, single server, connector config, you can pass `-c 1`, which will only create 1 replica for the connector.)
+## Before Migrating
+This repository contains all the connector plugins, `docker-compose` and `.properties` file generator for migrating your Upstash Kafka Connectors. Throughout, `docker-compose` is used with the official Kafka image. So, install `docker` and `docker-compose`, if they are not already installed.
+
+> Make sure that you are not producing any new messages to the connector topic, and all the messages in that topic are consumed. This way, you won't have to deal with partition offsets as well.
+
+## Generate the Files
+Run the following command to generate a `docker-compose.yaml` file and `.properties` files.
+(For standalone connector config, you can pass `-c 1`, which will only create 1 container for the connector.)
 ```
 chmod +x setup-connectors.sh
 ./setup-connectors.sh -b BOOTSTRAP_URL -u USERNAME -p PASSWORD -c 3
 docker-compose up
 ```
+Here, BOOTSTRAP_URL is the ENDPOINT given in the [Upstash Console](https://console.upstash.com/kafka).
 
-## See list of connectors
+## Make sure containers are up
+You can see the list of supported connectors via:
 ```
 curl localhost:8081/connector-plugins
 curl localhost:8082/connector-plugins
 curl localhost:8083/connector-plugins
 
-... (Depending on how many replicas you have)
+... (Depending on how many containers you have)
 ```
 
+## Migrate Your Configs
+In order to migrate the connectors, head out to `https://console.upstash.com/kafka/<cluster-id>?tab=connectors`, and select `edit` on the connector you wish to migrate. There, you will see a JSON config. You can use that config with the REST API to start a connector on the container, shown in this repository.
 
 ## Test Setup with Aiven Http Connector
 To verify that the connector setup works:
@@ -60,3 +71,9 @@ curl -d '{"name": "<name>","config": <config json>}' -H "Content-Type: applicati
 ```
 
 For more details, you can have a look at this [API documentation](https://docs.confluent.io/platform/current/connect/references/restapi.html)
+
+
+## Cleanup
+After you have safely migrated the connector, feel free to delete the connector from the console. If you are using our [Terraform](https://registry.terraform.io/providers/upstash/upstash) or [Pulumi](https://www.pulumi.com/registry/packages/upstash/) providers, also destroy the resources from there.
+
+If you want to tear down the docker containers, simply run `docker-compose down`.
