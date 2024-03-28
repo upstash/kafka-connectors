@@ -1,6 +1,6 @@
-# Kafka Connect with Upstash Kafka
+# Kafka Connect with Upstash Kafka®
 
-This guide helps you deploy Kafka Connect with Docker using Upstash Kafka as your Apache Kafka provider.
+This guide helps you deploy Kafka Connect with Docker using Upstash as your Apache Kafka® provider.
 
 **Prerequisites**
 
