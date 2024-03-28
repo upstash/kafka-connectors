@@ -178,31 +178,27 @@ For detailed information and additional functionalities, refer to Kafka Connect 
 
 If you were previously using Kafka Connect provided by Upstash, here's a guide to migrate to your own self-hosted Kafka Connect:
 
-### 1. Set Up Kafka Connect Framework:
+1. **Set Up Kafka Connect Framework**
+  Follow the instructions in the [Kafka Connect with Upstash Kafka](#kafka-connect-with-upstash-kafka) section to set up the Kafka Connect framework. However, hold off on creating connectors at this point.
 
-Follow the instructions in the [Kafka Connect with Upstash Kafka](#kafka-connect-with-upstash-kafka) section to set up the Kafka Connect framework. However, hold off on creating connectors at this point.
+2. **Prepare for Connector Migration**
+  * **Sync Connectors:** Ensure no new messages are being produced to the connector topic, and all existing messages within the topic have been consumed. Subsequently, pause the connector on the Upstash console. 
+  * **Source Connectors:** Stop any traffic to your database before pausing the connector on the Upstash console.
 
-### 2. Prepare for Connector Migration
+3. **Migrate Connectors**
+  Upstash provides a REST API and an "Export Config" button on the console to export your Kafka Connect configuration. You can then use this configuration directly to create connectors using the Kafka Connect [Rest API](#create-a-connector).
+    * **Console:** On the Upstash console, navigate to the list of connectors and click the "Export Config" button for the desired connector to retrieve its configuration.
+    * **REST API:** Obtain your `UPSTASH_KAFKA_REST_URL` from the Upstash cluster page accessible at Upstash Console: [https://console.upstash.com/kafka](https://console.upstash.com/kafka).
+      * Retrieve all connector configurations:
+      ```bash
+      curl UPSTASH_KAFKA_REST_URL/connect/config -u UPSTASH_KAFKA_REST_USERNAME:UPSTASH_KAFKA_REST_PASSWORD
+      ```
+      * To get a config of a specific connector:
+      ```
+      curl UPSTASH_KAFKA_REST_URL/connect/config/CONNECTOR_NAME -u UPSTASH_KAFKA_REST_USERNAME:UPSTASH_KAFKA_REST_PASSWORD
+      ```
 
-* **Sync Connectors:** Ensure no new messages are being produced to the connector topic, and all existing messages within the topic have been consumed. Subsequently, pause the connector on the Upstash console. 
-* **Source Connectors:** Stop any traffic to your database before pausing the connector on the Upstash console.
-
-### 3. Migrate Connectors
-
-Upstash provides a REST API and an "Export Config" button on the console to export your Kafka Connect configuration. You can then use this configuration directly to create connectors using the Kafka Connect [Rest API](#create-a-connector).
-  * **Console:** On the Upstash console, navigate to the list of connectors and click the "Export Config" button for the desired connector to retrieve its configuration.
-  * **REST API:** Obtain your `UPSTASH_KAFKA_REST_URL` from the Upstash cluster page accessible at Upstash Console: [https://console.upstash.com/kafka](https://console.upstash.com/kafka).
-    * Retrieve all connector configurations:
-    ```bash
-    curl UPSTASH_KAFKA_REST_URL/connect/config -u UPSTASH_KAFKA_REST_USERNAME:UPSTASH_KAFKA_REST_PASSWORD
-    ```
-    * To get a config of a specific connector:
-    ```
-    curl UPSTASH_KAFKA_REST_URL/connect/config/CONNECTOR_NAME -u UPSTASH_KAFKA_REST_USERNAME:UPSTASH_KAFKA_REST_PASSWORD
-    ```
-
-### 4. Finalize Migration
-
-* After successfully migrating a connector, you can safely delete it from the Upstash console.
-* If you're using Upstash's [Terraform](https://registry.terraform.io/providers/upstash/upstash) or  [Pulumi](https://www.pulumi.com/registry/packages/upstash/) providers, you should also destroy the corresponding resources within those providers.
+4. **Finalize Migration**
+  * After successfully migrating a connector, you can safely delete it from the Upstash console.
+  * If you're using Upstash's [Terraform](https://registry.terraform.io/providers/upstash/upstash) or  [Pulumi](https://www.pulumi.com/registry/packages/upstash/) providers, you should also destroy the corresponding resources within those providers.
 
