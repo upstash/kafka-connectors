@@ -1,29 +1,55 @@
-# Migrate from Upstash Kafka Connectors
-This project is a helper tool for users to migrate from Upstash Kafka Connect to self-hosted Kafka Connect.
+# Kafka Connect with Upstash Kafka
 
-## Before Migrating
-This repository contains all the connector plugins, `docker-compose`, and `.properties` file generators for migrating your Upstash Kafka Connectors. Throughout, `docker-compose` is used with the official Kafka image. So, install `docker` and `docker-compose`, if they are not already installed.
+This guide helps you deploy Kafka Connect with Docker using Upstash Kafka as your Apache Kafka provider.
 
-> Make sure that you are not producing any new messages to the connector topic, and that all the messages in that topic are consumed. And don't forget to pause the connector on the Upstash console before trying.
+**Prerequisites**
 
-## Generate the Files
-Run the following command to generate a `docker-compose.yaml` file and `.properties` files.
+* Ensure you have Docker and Docker Compose installed on your system.
 
-```
+## Configure Kafka Connect
+
+This guide sets up Kafka Connect in distributed mode, allowing you to scale up on demand as needed.
+
+**Generate Configuration Files**
+
+1. Begin by generating the configuration files, `connect-distributed.properties` and `docker-compose.yaml`. Run the following command:
+
+```bash
 chmod +x setup-connectors.sh
 ./setup-connectors.sh -b UPSTASH_KAFKA_ENDPOINT -u UPSTASH_KAFKA_USERNAME -p UPSTASH_KAFKA_PASSWORD -c 1
+```
+
+2. Replace the placeholders with the corresponding values from your Upstash Kafka cluster page accessible at Upstash Console: [https://console.upstash.com/kafka](https://console.upstash.com/kafka):
+
+* `UPSTASH_KAFKA_ENDPOINT`
+* `UPSTASH_KAFKA_USERNAME`
+* `UPSTASH_KAFKA_PASSWORD`
+
+**Understanding `connect-distributed.properties`**
+
+The `connect-distributed.properties` file contains configurations for the Kafka Connect framework itself. It includes important parameters that are documented within the file. You can further modify these parameters based on your specific needs. Refer to the : [Connect Distributed Config](https://github.com/apache/kafka/blob/4cb6806cb8f1cdbf9f47cb6521127fd3f49fa712/connect/runtime/src/main/java/org/apache/kafka/connect/runtime/distributed/DistributedConfig.java#L151) for a complete list of properties.
+
+**Scaling Kafka Connect Processes**
+
+To scale up the Kafka Connect processes, you can provide a value greater than 1 for the `-c` flag in the generation script. This will create a `docker-compose.yaml` file that can be used to launch multiple Docker containers, each running its own Kafka Connect process cooperatively.
+
+**Connector Resources**
+
+Sample configurations for some well-known connectors are provided in the `./connectors` directory. It's important to note that these are for illustrative purposes only and may become outdated. Ensure the JAR files for the connectors you require are placed in a directory within the `./connectors` directory.
+
+## Start and Verify Kafka Connect
+
+**Run Kafka Connect**
+
+1. Use Docker Compose to start Kafka Connect:
+
+```bash
 docker-compose up
 ```
 
-You can copy the following from the related cluster page at [Upstash Console](https://console.upstash.com/kafka).
-- UPSTASH_KAFKA_ENDPOINT
-- UPSTASH_KAFKA_USERNAME
-- UPSTASH_KAFKA_PASSWORD
+**Verify Connector Recognition**
 
-To scale up the connect processes, you can pass a greater value than 1 for `-c`. This will create multiple docker images each running its own Kafka Connect process cooperatively.
-
-## Make sure containers are up
-You can see the list of supported connectors via:
+2. You can verify that your connector is recognized and loaded by Kafka Connect using the [Rest API](#list-available-connector-plugins) as follows:
 
 ```bash
 curl localhost:8081/connector-plugins
@@ -33,44 +59,54 @@ curl localhost:8083/connector-plugins
 # ... (Depending on how many containers you have)
 ```
 
-## Migrate Your Configs
-To migrate the connectors, head out to `https://console.upstash.com/kafka/<cluster-id>?tab=connectors`, and select `edit` on the connector you wish to migrate. There, you will see a JSON config. You can use that config with the REST API to start a connector on the container, shown in this repository.
+**Stopping Kafka Connect**
 
-## Example Setup with Aiven Http Connector
-
-To verify that the connector setup works:
-You can go to `https://requestcatcher.com/` and get yourself a subdomain.
-Then, you can create a connector via the REST API:
+3. To stop the Docker containers, simply run:
 
 ```bash
- curl -H "Content-Type: application/json" -X POST http://localhost:8081/connectors -d '{
-    "name": "test-connector",
-    "config": {
-        "connector.class": "io.aiven.kafka.connect.http.HttpSinkConnector",
-        "topics": "<chosen topic name>",
-        "http.url": "https://<subdomain>.requestcatcher.com/test",
-        "http.authorization.type": "none","key.converter": 
-        "org.apache.kafka.connect.storage.StringConverter",
-        "value.converter": "org.apache.kafka.connect.storage.StringConverter"
-    }
-}' 
+docker-compose down
 ```
 
-> Make sure you have created a topic with name `<chosen topic name>`.
+### Example Setup with Aiven Http Connector
 
-Now, when you produce a message to a topic `<chosen topic name>`, you should be able to see the request caught at `https://<subdomain>.requestcatcher.com/test`.
+**Verify Connector Functionality**
 
-With this, you can verify that the connector setup works.
+1. To verify if your connector setup works, visit [https://requestcatcher.com/](https://requestcatcher.com/) to obtain a subdomain.
 
-## Connector Rest API
-You can do many operations on kafka-connect, through the REST API provided. Such examples are:
+2. Create a connector using the REST API:
 
-### List available connector plugins
+```bash
+curl -H "Content-Type: application/json" -X POST http://localhost:8081/connectors -d '{
+  "name": "test-connector",
+  "config": {
+    "connector.class": "io.aiven.kafka.connect.http.HttpSinkConnector",
+    "topics": "<chosen topic name>",
+    "http.url": "https://<subdomain>.requestcatcher.com/test",
+    "http.authorization.type": "none",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+  }
+}'
+```
+
+**Important Note:** Ensure you've created a topic with the name `<chosen topic name>`.
+
+3. Now, when you produce a message to the topic `<chosen topic name>`, you should be able to see the request captured at `https://<subdomain>.requestcatcher.com/test`. This confirms that your connector setup is functioning correctly.
+
+### Kafka Connect REST API
+
+The Kafka Connect REST API provides functionalities for managing Kafka Connect. Here are some common operations you can perform:
+
+**List Available Connector Plugins**
 
 ```bash
 curl localhost:8081/connector-plugins
 ```
-Response:
+
+This command retrieves a response listing all the available connector plugins recognized by Kafka Connect on that specific worker. The response will be in JSON format, containing details like class name, type, and version for each plugin.
+
+**Example Response:**
+
 ```json
 [
   {
@@ -78,95 +114,34 @@ Response:
     "type": "sink",
     "version": "1.10.0"
   },
-  {
-    "class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
-    "type": "sink",
-    "version": "1.9.1"
-  },
-  {
-    "class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
-    "type": "sink",
-    "version": "unknown"
-  },
-  {
-    "class": "io.aiven.connect.jdbc.JdbcSinkConnector",
-    "type": "sink",
-    "version": "6.8.0"
-  },
-  {
-    "class": "io.aiven.kafka.connect.http.HttpSinkConnector",
-    "type": "sink",
-    "version": "0.6.0"
-  },
-  {
-    "class": "io.aiven.kafka.connect.opensearch.OpensearchSinkConnector",
-    "type": "sink",
-    "version": "3.0.0"
-  },
-  {
-    "class": "io.aiven.kafka.connect.s3.AivenKafkaConnectS3SinkConnector",
-    "type": "sink",
-    "version": "2.12.1"
-  },
-  {
-    "class": "com.mongodb.kafka.connect.MongoSourceConnector",
-    "type": "source",
-    "version": "1.10.0"
-  },
-  {
-    "class": "io.aiven.connect.jdbc.JdbcSourceConnector",
-    "type": "source",
-    "version": "6.8.0"
-  },
-  {
-    "class": "io.debezium.connector.mongodb.MongoDbConnector",
-    "type": "source",
-    "version": "2.2.1.Final"
-  },
-  {
-    "class": "io.debezium.connector.mysql.MySqlConnector",
-    "type": "source",
-    "version": "1.9.7.Final"
-  },
-  {
-    "class": "io.debezium.connector.postgresql.PostgresConnector",
-    "type": "source",
-    "version": "1.9.7.Final"
-  },
-  {
-    "class": "org.apache.kafka.connect.mirror.MirrorCheckpointConnector",
-    "type": "source",
-    "version": "3.6.1"
-  },
-  {
-    "class": "org.apache.kafka.connect.mirror.MirrorHeartbeatConnector",
-    "type": "source",
-    "version": "3.6.1"
-  },
-  {
-    "class": "org.apache.kafka.connect.mirror.MirrorSourceConnector",
-    "type": "source",
-    "version": "3.6.1"
-  }
+  # ... (List of other connectors)
 ]
 ```
 
-### List created connectors
+**List Created Connectors**
 
 ```bash
 curl localhost:8081/connectors
 ```
-Response:
+
+This command returns a JSON response containing a list of all currently created connectors on that Kafka Connect worker. The response will include the names of the connectors.
+
+**Example Response:**
+
 ```json
 ["connector-name"]
 ```
 
-#### Get details of a connector
+**Get Details of a Connector**
 
 ```bash
 curl localhost:8081/connectors/<connector-name>
 ```
-Response:
+
+Replace `<connector-name>` with the actual name of the connector you want details for. This command retrieves a detailed JSON response about the specified connector, including its configuration, tasks, and type (source or sink).
+
+**Example Response:**
+
 ```json
 {
   "name": "connector-name",
@@ -189,32 +164,45 @@ Response:
 }
 ```
 
-### Create a connector
+**Create a Connector**
 
 ```bash
 curl -d '{"name": "<name>","config": <config json>}' -H "Content-Type: application/json" -X POST http://localhost:8081/connectors
 ```
-Response:
-```json
-{
-  "name": "connector-name",
-  "config": {
-    "connector.class": "io.aiven.kafka.connect.http.HttpSinkConnector",
-    "topics": "test",
-    "http.url": "https://<subdomain>.requestcatcher.com/test",
-    "http.authorization.type": "none",
-    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-    "name": "connector-name"
-  },
-  "tasks": [],
-  "type": "sink"
-}
-```
 
-For more details, you can have a look at this [API documentation](https://docs.confluent.io/platform/current/connect/references/restapi.html)
+This command allows you to create a new connector using a JSON payload containing the connector's name and configuration.
 
-## Cleanup
-After you have safely migrated the connector, feel free to delete the connector from the console. If you are using our [Terraform](https://registry.terraform.io/providers/upstash/upstash) or [Pulumi](https://www.pulumi.com/registry/packages/upstash/) providers, also destroy the resources from there.
+For detailed information and additional functionalities, refer to Kafka Connect REST API documentation: [https://docs.confluent.io/platform/current/connect/references/restapi.html](https://docs.confluent.io/platform/current/connect/references/restapi.html)
 
-If you want to tear down the docker containers, simply run `docker-compose down`.
+## Migration Guide From Upstash Kafka Connect
+
+If you were previously using Kafka Connect provided by Upstash, here's a guide to migrate to your own self-hosted Kafka Connect:
+
+### 1. Set Up Kafka Connect Framework:
+
+Follow the instructions in the [Kafka Connect with Upstash Kafka](#kafka-connect-with-upstash-kafka) section to set up the Kafka Connect framework. However, hold off on creating connectors at this point.
+
+### 2. Prepare for Connector Migration
+
+* **Sync Connectors:** Ensure no new messages are being produced to the connector topic, and all existing messages within the topic have been consumed. Subsequently, pause the connector on the Upstash console. 
+* **Source Connectors:** Stop any traffic to your database before pausing the connector on the Upstash console.
+
+### 3. Migrate Connectors
+
+Upstash provides a REST API and an "Export Config" button on the console to export your Kafka Connect configuration. You can then use this configuration directly to create connectors using the Kafka Connect [Rest API](#create-a-connector).
+  * **Console:** On the Upstash console, navigate to the list of connectors and click the "Export Config" button for the desired connector to retrieve its configuration.
+  * **REST API:** Obtain your `UPSTASH_KAFKA_REST_URL` from the Upstash cluster page accessible at Upstash Console: [https://console.upstash.com/kafka](https://console.upstash.com/kafka).
+    * Retrieve all connector configurations:
+    ```bash
+    curl UPSTASH_KAFKA_REST_URL/connect/config -u UPSTASH_KAFKA_REST_USERNAME:UPSTASH_KAFKA_REST_PASSWORD
+    ```
+    * To get a config of a specific connector:
+    ```
+    curl UPSTASH_KAFKA_REST_URL/connect/config/CONNECTOR_NAME -u UPSTASH_KAFKA_REST_USERNAME:UPSTASH_KAFKA_REST_PASSWORD
+    ```
+
+### 4. Finalize Migration
+
+* After successfully migrating a connector, you can safely delete it from the Upstash console.
+* If you're using Upstash's [Terraform](https://registry.terraform.io/providers/upstash/upstash) or  [Pulumi](https://www.pulumi.com/registry/packages/upstash/) providers, you should also destroy the corresponding resources within those providers.
+
